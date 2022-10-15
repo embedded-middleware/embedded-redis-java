@@ -1,0 +1,18 @@
+name: checkstyle
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: checkstyle
+        run: mvn -B clean checkstyle:check

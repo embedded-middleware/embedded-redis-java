@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  push_to_registries:
+    name: Push Docker image to multiple registries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push to Docker Hub
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: embeddedmiddleware/redis
+          platforms: linux/amd64,linux/arm64
+      - name: Save Docker Images
+        run: docker pull embeddedmiddleware/redis;docker save embeddedmiddleware/redis -o embedded-redis.tar.gz
+      - uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true
+          tag_name: latest_docker_image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag release
+        uses: tvdias/github-tagger@v0.0.2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          tag: latest_docker_image
+
+      # Creates the new release with the binary as a release asset.
+      # If the previous Action was skipped, then this keeps the same tag as the
+      # previous release.
+      - name: Create new release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: "Latest docker image"
+          draft: false
+          name: "latest docker image"
+          tag_name: latest_docker_image
+          files: embedded-redis.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
