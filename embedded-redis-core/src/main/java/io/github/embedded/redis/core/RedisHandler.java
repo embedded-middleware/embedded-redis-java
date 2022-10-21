@@ -6,11 +6,13 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.redis.ArrayRedisMessage;
 import io.netty.handler.codec.redis.ErrorRedisMessage;
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage;
+import io.netty.handler.codec.redis.IntegerRedisMessage;
 import io.netty.handler.codec.redis.RedisMessage;
 import io.netty.handler.codec.redis.SimpleStringRedisMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Slf4j
 public class RedisHandler extends ChannelInboundHandlerAdapter {
@@ -39,6 +41,8 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
                 switch (commandEnum) {
                     case SET -> handleSetCmd(ctx, arrayRedisMessage);
                     case GET -> handleGetCmd(ctx, arrayRedisMessage);
+                    case KEYS -> handleKeysCmd(ctx, arrayRedisMessage);
+                    case DEL -> handleDelCmd(ctx, arrayRedisMessage);
                     case PING -> handlePingCmd(ctx, arrayRedisMessage);
                 }
             } catch (IllegalArgumentException e) {
@@ -62,6 +66,28 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
         String key = CodecUtil.str(keyMsg);
         byte[] msg = redisEngine.get(key);
         ctx.writeAndFlush(new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(msg)));
+    }
+
+    private void handleKeysCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage patternMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        String pattern = CodecUtil.str(patternMsg);
+        List<String> keys = redisEngine.keys(pattern);
+        List<RedisMessage> redisMessages = keys.stream()
+                .map(key -> (RedisMessage)
+                        new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(key.getBytes(StandardCharsets.UTF_8))))
+                .toList();
+        ctx.writeAndFlush(new ArrayRedisMessage(redisMessages));
+    }
+
+    private void handleDelCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        List<RedisMessage> bulkStringMsgList = arrayRedisMessage.children()
+                .subList(1, arrayRedisMessage.children().size());
+        List<String> keys = bulkStringMsgList.stream()
+                .map(redisMessage -> (FullBulkStringRedisMessage) redisMessage)
+                .map(CodecUtil::str)
+                .toList();
+        long count = redisEngine.delete(keys);
+        ctx.writeAndFlush(new IntegerRedisMessage(count));
     }
 
     private void handlePingCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {

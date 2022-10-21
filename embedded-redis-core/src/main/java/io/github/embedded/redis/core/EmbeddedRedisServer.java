@@ -48,6 +48,7 @@ public class EmbeddedRedisServer {
     }
 
     public void start() throws Exception {
+        RedisEngine redisEngine = new RedisEngine();
         final ServerBootstrap b = new ServerBootstrap();
         b.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
@@ -60,7 +61,7 @@ public class EmbeddedRedisServer {
                         pipeline.addLast(new RedisBulkStringAggregator());
                         pipeline.addLast(new RedisArrayAggregator());
                         pipeline.addLast(new RedisEncoder());
-                        pipeline.addLast(new RedisHandler(new RedisEngine()));
+                        pipeline.addLast(new RedisHandler(redisEngine));
                     }
                 });
         b.bind(listenPort).sync();
