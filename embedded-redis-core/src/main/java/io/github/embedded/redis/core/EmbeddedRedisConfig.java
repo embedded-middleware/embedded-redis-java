@@ -9,6 +9,8 @@ public class EmbeddedRedisConfig {
 
     private int port = 6379;
 
+    private int httpPort = 16379;
+
     public EmbeddedRedisConfig() {
     }
 
@@ -19,6 +21,11 @@ public class EmbeddedRedisConfig {
 
     public EmbeddedRedisConfig port(int port) {
         this.port = port;
+        return this;
+    }
+
+    public EmbeddedRedisConfig httpPort(int httpPort) {
+        this.httpPort = httpPort;
         return this;
     }
 

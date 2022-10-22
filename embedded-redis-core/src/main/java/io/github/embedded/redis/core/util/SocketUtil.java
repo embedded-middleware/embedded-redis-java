@@ -1,4 +1,4 @@
-package io.github.embedded.redis.core;
+package io.github.embedded.redis.core.util;
 
 import java.net.ServerSocket;
 

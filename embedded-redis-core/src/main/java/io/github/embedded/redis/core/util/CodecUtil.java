@@ -1,4 +1,4 @@
-package io.github.embedded.redis.core;
+package io.github.embedded.redis.core.util;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage;
