@@ -1,5 +1,9 @@
 package io.github.embedded.redis.core;
 
+import com.sun.net.httpserver.HttpServer;
+import io.github.embedded.redis.core.http.KeyHttpHandler;
+import io.github.embedded.redis.core.http.KeysHttpHandler;
+import io.github.embedded.redis.core.util.SocketUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -13,12 +17,17 @@ import io.netty.handler.codec.redis.RedisDecoder;
 import io.netty.handler.codec.redis.RedisEncoder;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+
 @Slf4j
 public class EmbeddedRedisServer {
 
     private final EmbeddedRedisConfig embeddedRedisConfig;
 
     private final int listenPort;
+
+    private final int httpListenPort;
 
     private final NioEventLoopGroup bossGroup;
 
@@ -34,6 +43,11 @@ public class EmbeddedRedisServer {
             this.listenPort = SocketUtil.getFreePort();
         } else {
             this.listenPort = embeddedRedisConfig.getPort();
+        }
+        if (embeddedRedisConfig.getHttpPort() == 0) {
+            this.httpListenPort = SocketUtil.getFreePort();
+        } else {
+            this.httpListenPort = embeddedRedisConfig.getHttpPort();
         }
         this.bossGroup = new NioEventLoopGroup();
         this.workerGroup = new NioEventLoopGroup();
@@ -65,7 +79,18 @@ public class EmbeddedRedisServer {
                     }
                 });
         b.bind(listenPort).sync();
-        log.info("embedded redis start success at {}", listenPort);
+        new Thread(() -> {
+            try {
+                InetSocketAddress socketAddress = new InetSocketAddress("0.0.0.0", httpListenPort);
+                HttpServer httpServer = HttpServer.create(socketAddress, 0);
+                httpServer.createContext("/keys", new KeysHttpHandler(redisEngine));
+                httpServer.createContext("/keys/", new KeyHttpHandler(redisEngine));
+                httpServer.start();
+            } catch (IOException e) {
+                log.error("start prometheus metrics server error", e);
+            }
+        }).start();
+        log.info("embedded redis start success. tcp listen at {} http listen at {}", listenPort, httpListenPort);
     }
 
     public void close() throws Exception {

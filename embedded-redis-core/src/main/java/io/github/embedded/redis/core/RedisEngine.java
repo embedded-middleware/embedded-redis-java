@@ -1,5 +1,6 @@
 package io.github.embedded.redis.core;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,10 @@ public class RedisEngine {
         map.put(key, value);
     }
 
+    public void set(String key, String value) {
+        map.put(key, value.getBytes(StandardCharsets.UTF_8));
+    }
+
     public byte[] get(String key) {
         return map.get(key);
     }
@@ -30,6 +35,13 @@ public class RedisEngine {
             }
         }
         return result;
+    }
+
+    public long delete(String key) {
+        if (map.remove(key) != null) {
+            return 1;
+        }
+        return 0;
     }
 
     public long delete(List<String> keys) {

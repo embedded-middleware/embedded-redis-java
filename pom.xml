@@ -20,6 +20,7 @@
         <src.dir>src/main/java</src.dir>
         <!-- dependency -->
         <hamcrest.version>2.2</hamcrest.version>
+        <jackson.version>2.13.3</jackson.version>
         <jedis.version>4.3.0</jedis.version>
         <junit.version>5.9.1</junit.version>
         <lettuce.version>6.2.1.RELEASE</lettuce.version>
