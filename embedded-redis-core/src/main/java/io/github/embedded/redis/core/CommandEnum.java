@@ -7,5 +7,7 @@ public enum CommandEnum {
     KEYS,
     DEL,
     PING,
+    FLUSHDB,
+    FLUSHALL,
 
 }

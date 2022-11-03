@@ -53,4 +53,8 @@ public class RedisEngine {
         }
         return count;
     }
+
+    public void flush() {
+        map.clear();
+    }
 }
