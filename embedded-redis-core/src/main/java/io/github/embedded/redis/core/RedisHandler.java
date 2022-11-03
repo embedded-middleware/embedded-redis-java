@@ -45,6 +45,8 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
                     case KEYS -> handleKeysCmd(ctx, arrayRedisMessage);
                     case DEL -> handleDelCmd(ctx, arrayRedisMessage);
                     case PING -> handlePingCmd(ctx, arrayRedisMessage);
+                    case FLUSHDB -> handleFlushDBCmd(ctx, arrayRedisMessage);
+                    case FLUSHALL -> handleFlushAllCmd(ctx, arrayRedisMessage);
                 }
             } catch (IllegalArgumentException e) {
                 log.error("Unknown command: {}", cmd, e);
@@ -94,6 +96,16 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
     private void handlePingCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
         ctx.writeAndFlush(new FullBulkStringRedisMessage(
                 Unpooled.wrappedBuffer("PONG".getBytes(StandardCharsets.UTF_8))));
+    }
+
+    private void handleFlushDBCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        redisEngine.flush();
+        ctx.writeAndFlush(new SimpleStringRedisMessage("OK"));
+    }
+
+    private void handleFlushAllCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        redisEngine.flush();
+        ctx.writeAndFlush(new SimpleStringRedisMessage("OK"));
     }
 
 }

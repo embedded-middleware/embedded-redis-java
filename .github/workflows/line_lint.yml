@@ -4,7 +4,7 @@ on:
     branches:
       - main
 jobs:
-  build:
+  line-lint:
     name: line lint
     runs-on: ubuntu-latest
     steps:
