@@ -28,7 +28,7 @@ public class KeyHttpHandler implements HttpHandler {
             }
             case "DELETE" -> {
                 redisEngine.delete(key);
-                exchange.sendResponseHeaders(200, 0);
+                exchange.sendResponseHeaders(204, 0);
             }
             default -> exchange.sendResponseHeaders(405, 0);
         }

@@ -1,6 +1,7 @@
 package io.github.embedded.redis.core;
 
 import com.sun.net.httpserver.HttpServer;
+import io.github.embedded.redis.core.http.FlushHttpHandler;
 import io.github.embedded.redis.core.http.KeyHttpHandler;
 import io.github.embedded.redis.core.http.KeysHttpHandler;
 import io.github.embedded.redis.core.util.SocketUtil;
@@ -85,6 +86,7 @@ public class EmbeddedRedisServer {
                 HttpServer httpServer = HttpServer.create(socketAddress, 0);
                 httpServer.createContext("/keys", new KeysHttpHandler(redisEngine));
                 httpServer.createContext("/keys/", new KeyHttpHandler(redisEngine));
+                httpServer.createContext("/actions/flush", new FlushHttpHandler(redisEngine));
                 httpServer.start();
             } catch (IOException e) {
                 log.error("start prometheus metrics server error", e);
