@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,9 +28,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-public class LettuceFlushTest {
+public class LettuceSetExTest {
 
     private static EmbeddedRedisServer redisServer;
 
@@ -52,27 +52,19 @@ public class LettuceFlushTest {
     }
 
     @Test
-    void testFlushDB() {
+    void testSetExCase1() throws InterruptedException {
         RedisCommands<String, String> commands = client.connect().sync();
-        commands.set("k1", "v1");
-        commands.set("k2", "v2");
-        List<String> keys = commands.keys("*");
-        Assertions.assertTrue(keys.size() > 0);
-        commands.flushdb();
-        List<String> result = commands.keys("*");
-        Assertions.assertTrue(result.isEmpty());
+        commands.setex("k1", 1, "v1");
+        TimeUnit.SECONDS.sleep(1);
+        Assertions.assertNull(commands.get("k1"));
     }
 
     @Test
-    void testFlushAll() {
+    void testSetExCase2() throws InterruptedException {
         RedisCommands<String, String> commands = client.connect().sync();
-        commands.set("k1", "v1");
-        commands.set("k2", "v2");
-        List<String> keys = commands.keys("*");
-        Assertions.assertTrue(keys.size() > 0);
-        commands.flushall();
-        List<String> result = commands.keys("*");
-        Assertions.assertTrue(result.isEmpty());
+        commands.setex("k1", 5, "v1");
+        TimeUnit.SECONDS.sleep(1);
+        Assertions.assertEquals("v1", commands.get("k1"));
     }
 
 }

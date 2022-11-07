@@ -39,7 +39,7 @@ public class LettuceSetGetTest {
         redisServer = new EmbeddedRedisServer(new EmbeddedRedisConfig().port(0));
         redisServer.start();
         // wait for redis server start
-        Thread.sleep(5_000);
+        Thread.sleep(3_000);
         client = RedisClient.create(String.format("redis://localhost:%d", redisServer.getPort()));
     }
 
@@ -54,6 +54,13 @@ public class LettuceSetGetTest {
         RedisCommands<String, String> commands = client.connect().sync();
         commands.set("k1", "v1");
         Assertions.assertEquals("v1", commands.get("k1"));
+    }
+
+    @Test
+    void testSetCase2() {
+        RedisCommands<String, String> commands = client.connect().sync();
+        commands.get("k2");
+        Assertions.assertNull(commands.get("k2"));
     }
 
 }
