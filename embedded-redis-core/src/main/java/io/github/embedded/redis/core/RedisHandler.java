@@ -60,6 +60,7 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
                 CommandEnum commandEnum = CommandEnum.valueOf(cmd);
                 switch (commandEnum) {
                     case SET -> handleSetCmd(ctx, arrayRedisMessage);
+                    case SETEX -> handleSetExCmd(ctx, arrayRedisMessage);
                     case GET -> handleGetCmd(ctx, arrayRedisMessage);
                     case KEYS -> handleKeysCmd(ctx, arrayRedisMessage);
                     case DEL -> handleDelCmd(ctx, arrayRedisMessage);
@@ -83,11 +84,26 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
         ctx.writeAndFlush(new SimpleStringRedisMessage("OK"));
     }
 
+    private void handleSetExCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        FullBulkStringRedisMessage expireMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(2);
+        FullBulkStringRedisMessage valueMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(3);
+        String key = CodecUtil.str(keyMsg);
+        byte[] value = CodecUtil.bytes(valueMsg);
+        int expire = Integer.parseInt(CodecUtil.str(expireMsg));
+        redisEngine.setEx(key, value, expire);
+        ctx.writeAndFlush(new SimpleStringRedisMessage("OK"));
+    }
+
     private void handleGetCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
         FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
         String key = CodecUtil.str(keyMsg);
-        byte[] msg = redisEngine.get(key);
-        ctx.writeAndFlush(new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(msg)));
+        byte[] msg = redisEngine.getContent(key);
+        if (msg == null) {
+            ctx.writeAndFlush(FullBulkStringRedisMessage.NULL_INSTANCE);
+        } else {
+            ctx.writeAndFlush(new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(msg)));
+        }
     }
 
     private void handleKeysCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {

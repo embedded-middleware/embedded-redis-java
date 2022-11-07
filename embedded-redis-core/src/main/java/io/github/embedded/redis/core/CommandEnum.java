@@ -22,6 +22,7 @@ package io.github.embedded.redis.core;
 public enum CommandEnum {
 
     SET,
+    SETEX,
     GET,
     KEYS,
     DEL,

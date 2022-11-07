@@ -41,7 +41,7 @@ public class LettuceFlushTest {
         redisServer = new EmbeddedRedisServer(new EmbeddedRedisConfig().port(0));
         redisServer.start();
         // wait for redis server start
-        Thread.sleep(5_000);
+        Thread.sleep(3_000);
         client = RedisClient.create(String.format("redis://localhost:%d", redisServer.getPort()));
     }
 

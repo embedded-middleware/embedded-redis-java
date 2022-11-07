@@ -41,7 +41,7 @@ public class KeyHttpHandler implements HttpHandler {
         String key = split[split.length - 1];
         switch (requestMethod) {
             case "GET" -> {
-                byte[] value = redisEngine.get(key);
+                byte[] value = redisEngine.getContent(key);
                 exchange.sendResponseHeaders(200, value.length);
                 exchange.getResponseBody().write(value);
             }

@@ -28,21 +28,38 @@ import java.util.regex.Pattern;
 
 public class RedisEngine {
 
-    private final Map<String, byte[]> map = new ConcurrentHashMap<>();
+    private final Map<String, RedisVal> map = new ConcurrentHashMap<>();
 
     public RedisEngine() {
     }
 
     public void set(String key, byte[] value) {
-        map.put(key, value);
+        map.put(key, new RedisVal(value));
     }
 
     public void set(String key, String value) {
-        map.put(key, value.getBytes(StandardCharsets.UTF_8));
+        map.put(key, new RedisVal(value.getBytes(StandardCharsets.UTF_8)));
     }
 
-    public byte[] get(String key) {
-        return map.get(key);
+    public void setEx(String key, byte[] value, long expire) {
+        map.put(key, new RedisVal(value, expire));
+    }
+
+    public RedisVal get(String key) {
+        RedisVal redisVal = map.get(key);
+        if (redisVal != null && redisVal.isExpired()) {
+            map.remove(key);
+            return null;
+        }
+        return redisVal;
+    }
+
+    public byte[] getContent(String key) {
+        RedisVal redisVal = get(key);
+        if (redisVal == null) {
+            return null;
+        }
+        return redisVal.getContent();
     }
 
     public List<String> keys(String pattern) {
