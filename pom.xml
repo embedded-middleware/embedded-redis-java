@@ -1,22 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
+    Copyright 2024 shoothzj <shoothzj@gmail.com>
 
-      http://www.apache.org/licenses/LICENSE-2.0
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -40,18 +37,18 @@
         <src.dir>src/main/java</src.dir>
         <!-- dependency -->
         <hamcrest.version>2.2</hamcrest.version>
-        <jackson.version>2.13.3</jackson.version>
+        <jackson.version>2.16.1</jackson.version>
         <jedis.version>4.3.0</jedis.version>
-        <junit.version>5.9.1</junit.version>
-        <lettuce.version>6.2.1.RELEASE</lettuce.version>
+        <junit.version>5.10.2</junit.version>
+        <lettuce.version>6.3.1.RELEASE</lettuce.version>
         <log4j.version>2.17.2</log4j.version>
-        <lombok.version>1.18.24</lombok.version>
-        <netty.version>4.1.84.Final</netty.version>
+        <lombok.version>1.18.30</lombok.version>
+        <netty.version>4.1.107.Final</netty.version>
         <slf4j.version>1.7.36</slf4j.version>
         <!-- plugin -->
         <compiler-plugin.version>3.10.1</compiler-plugin.version>
         <checkstyle-plugin.version>3.2.0</checkstyle-plugin.version>
-        <puppycrawl.version>10.3.3</puppycrawl.version>
+        <puppycrawl.version>10.14.0</puppycrawl.version>
         <spotbugs-maven-plugin.version>4.7.2.0</spotbugs-maven-plugin.version>
     </properties>
 
@@ -138,7 +135,7 @@
                     <dependency>
                         <groupId>org.apache.maven.scm</groupId>
                         <artifactId>maven-scm-provider-gitexe</artifactId>
-                        <version>1.13.0</version>
+                        <version>2.0.1</version>
                     </dependency>
                 </dependencies>
             </plugin>
