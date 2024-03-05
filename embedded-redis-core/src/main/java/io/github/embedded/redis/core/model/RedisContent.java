@@ -14,34 +14,26 @@
  * limitations under the License.
  */
 
-package io.github.embedded.redis.core;
+package io.github.embedded.redis.core.model;
 
-import lombok.Getter;
-import lombok.Setter;
+public class RedisContent {
+    private RedisVal val;
 
-import java.util.concurrent.TimeUnit;
+    private RedisSet set;
 
-@Setter
-@Getter
-public class RedisVal {
-
-    private byte[] content;
-
-    private long expiredNs;
-
-    public RedisVal() {
+    public RedisContent(RedisVal redisVal) {
+        this.val = redisVal;
     }
 
-    public RedisVal(byte[] content) {
-        this.content = content;
+    public RedisContent(RedisSet redisSet) {
+        this.set = redisSet;
     }
 
-    public RedisVal(byte[] content, long expireSeconds) {
-        this.content = content;
-        this.expiredNs = System.nanoTime() + TimeUnit.SECONDS.toNanos(expireSeconds);
+    public RedisVal val() {
+        return this.val;
     }
 
-    public boolean isExpired() {
-        return expiredNs > 0 && System.nanoTime() > expiredNs;
+    public RedisSet set() {
+        return this.set;
     }
 }

@@ -14,26 +14,4 @@
  * limitations under the License.
  */
 
-package io.github.embedded.redis.core;
-
-public enum CommandEnum {
-
-    SET,
-    SETEX,
-    GET,
-    HSET,
-    HGET,
-    HMSET,
-    HMGET,
-    HDEL,
-    HEXISTS,
-    HKEYS,
-    HVALS,
-    HGETALL,
-    KEYS,
-    DEL,
-    PING,
-    FLUSHDB,
-    FLUSHALL,
-
-}
+package io.github.embedded.redis.core.model;
