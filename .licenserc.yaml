@@ -1,0 +1,9 @@
+header:
+  license:
+    spdx-id: Apache-2.0
+    copyright-owner: shoothzj
+    copyright-year: '2024'
+  paths-ignore:
+    - '**/*.md'
+    - 'LICENSE'
+    - 'NOTICE'
