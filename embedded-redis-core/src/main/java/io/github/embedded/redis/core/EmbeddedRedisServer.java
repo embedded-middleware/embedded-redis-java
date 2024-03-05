@@ -61,10 +61,14 @@ public class EmbeddedRedisServer {
         } else {
             this.listenPort = embeddedRedisConfig.getPort();
         }
-        if (embeddedRedisConfig.getHttpPort() == 0) {
-            this.httpListenPort = SocketUtil.getFreePort();
+        if (embeddedRedisConfig.isHttpEnable()) {
+            if (embeddedRedisConfig.getHttpPort() == 0) {
+                this.httpListenPort = SocketUtil.getFreePort();
+            } else {
+                this.httpListenPort = embeddedRedisConfig.getHttpPort();
+            }
         } else {
-            this.httpListenPort = embeddedRedisConfig.getHttpPort();
+            this.httpListenPort = 0;
         }
         this.bossGroup = new NioEventLoopGroup();
         this.workerGroup = new NioEventLoopGroup();
@@ -96,19 +100,22 @@ public class EmbeddedRedisServer {
                     }
                 });
         b.bind(listenPort).sync();
-        new Thread(() -> {
-            try {
-                InetSocketAddress socketAddress = new InetSocketAddress("0.0.0.0", httpListenPort);
-                HttpServer httpServer = HttpServer.create(socketAddress, 0);
-                httpServer.createContext("/keys", new KeysHttpHandler(redisEngine));
-                httpServer.createContext("/keys/", new KeyHttpHandler(redisEngine));
-                httpServer.createContext("/actions/flush", new FlushHttpHandler(redisEngine));
-                httpServer.start();
-            } catch (IOException e) {
-                log.error("start prometheus metrics server error", e);
-            }
-        }).start();
-        log.info("embedded redis start success. tcp listen at {} http listen at {}", listenPort, httpListenPort);
+        log.info("embedded redis start. tcp listen at {}", listenPort);
+        if (embeddedRedisConfig.isHttpEnable()) {
+            new Thread(() -> {
+                try {
+                    InetSocketAddress socketAddress = new InetSocketAddress("0.0.0.0", httpListenPort);
+                    HttpServer httpServer = HttpServer.create(socketAddress, 0);
+                    httpServer.createContext("/keys", new KeysHttpHandler(redisEngine));
+                    httpServer.createContext("/keys/", new KeyHttpHandler(redisEngine));
+                    httpServer.createContext("/actions/flush", new FlushHttpHandler(redisEngine));
+                    httpServer.start();
+                } catch (IOException e) {
+                    log.error("start prometheus metrics server error", e);
+                }
+            }).start();
+            log.info("embedded redis start. http listen at {}", httpListenPort);
+        }
     }
 
     public void close() throws Exception {

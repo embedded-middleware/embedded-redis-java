@@ -24,6 +24,10 @@
 
     <!-- pattern sort by alpha -->
     <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <Match>
         <Bug pattern="EI_EXPOSE_REP"/>
     </Match>
 

@@ -29,7 +29,12 @@ import io.netty.handler.codec.redis.SimpleStringRedisMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class RedisHandler extends ChannelInboundHandlerAdapter {
@@ -59,8 +64,17 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
                     case SET -> handleSetCmd(ctx, arrayRedisMessage);
                     case SETEX -> handleSetExCmd(ctx, arrayRedisMessage);
                     case GET -> handleGetCmd(ctx, arrayRedisMessage);
-                    case KEYS -> handleKeysCmd(ctx, arrayRedisMessage);
                     case DEL -> handleDelCmd(ctx, arrayRedisMessage);
+                    case HSET -> handleHsetCmd(ctx, arrayRedisMessage);
+                    case HGET -> handleHgetCmd(ctx, arrayRedisMessage);
+                    case HMSET -> handleHmsetCmd(ctx, arrayRedisMessage);
+                    case HMGET -> handleHmgetCmd(ctx, arrayRedisMessage);
+                    case HDEL -> handleHdelCmd(ctx, arrayRedisMessage);
+                    case HEXISTS -> handleHexistsCmd(ctx, arrayRedisMessage);
+                    case HKEYS -> handleHkeysCmd(ctx, arrayRedisMessage);
+                    case HVALS -> handleHvalsCmd(ctx, arrayRedisMessage);
+                    case HGETALL -> handleHgetallCmd(ctx, arrayRedisMessage);
+                    case KEYS -> handleKeysCmd(ctx, arrayRedisMessage);
                     case PING -> handlePingCmd(ctx, arrayRedisMessage);
                     case FLUSHDB -> handleFlushDBCmd(ctx, arrayRedisMessage);
                     case FLUSHALL -> handleFlushAllCmd(ctx, arrayRedisMessage);
@@ -103,17 +117,6 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void handleKeysCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
-        FullBulkStringRedisMessage patternMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
-        String pattern = CodecUtil.str(patternMsg);
-        List<String> keys = redisEngine.keys(pattern);
-        List<RedisMessage> redisMessages = keys.stream()
-                .map(key -> (RedisMessage)
-                        new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(key.getBytes(StandardCharsets.UTF_8))))
-                .toList();
-        ctx.writeAndFlush(new ArrayRedisMessage(redisMessages));
-    }
-
     private void handleDelCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
         List<RedisMessage> bulkStringMsgList = arrayRedisMessage.children()
                 .subList(1, arrayRedisMessage.children().size());
@@ -123,6 +126,128 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
                 .toList();
         long count = redisEngine.delete(keys);
         ctx.writeAndFlush(new IntegerRedisMessage(count));
+    }
+
+    private void handleHsetCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        FullBulkStringRedisMessage fieldMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(2);
+        FullBulkStringRedisMessage valueMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(3);
+        String key = CodecUtil.str(keyMsg);
+        String field = CodecUtil.str(fieldMsg);
+        byte[] value = CodecUtil.bytes(valueMsg);
+        redisEngine.hset(key, field, value);
+        ctx.writeAndFlush(new IntegerRedisMessage(1));
+    }
+
+    private void handleHgetCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        FullBulkStringRedisMessage fieldMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(2);
+        String key = CodecUtil.str(keyMsg);
+        String field = CodecUtil.str(fieldMsg);
+        byte[] value = redisEngine.hget(key, field);
+        if (value == null) {
+            ctx.writeAndFlush(FullBulkStringRedisMessage.NULL_INSTANCE);
+        } else {
+            ctx.writeAndFlush(new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(value)));
+        }
+    }
+
+    private void handleHmsetCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        String key = CodecUtil.str(keyMsg);
+        Map<String, byte[]> hash = new HashMap<>();
+        for (int i = 2; i < arrayRedisMessage.children().size(); i += 2) {
+            FullBulkStringRedisMessage fieldMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(i);
+            FullBulkStringRedisMessage valueMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(i + 1);
+            String field = CodecUtil.str(fieldMsg);
+            byte[] value = CodecUtil.bytes(valueMsg);
+            hash.put(field, value);
+        }
+        redisEngine.hmset(key, hash);
+        ctx.writeAndFlush(new SimpleStringRedisMessage("OK"));
+    }
+
+    private void handleHmgetCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        String key = CodecUtil.str(keyMsg);
+        List<String> fields = arrayRedisMessage.children().stream()
+                .skip(2)
+                .map(redisMessage -> (FullBulkStringRedisMessage) redisMessage)
+                .map(CodecUtil::str)
+                .collect(Collectors.toList());
+        List<byte[]> values = redisEngine.hmget(key, fields);
+        List<RedisMessage> valueMessages = values.stream()
+                .map(value -> value == null ? FullBulkStringRedisMessage.NULL_INSTANCE :
+                        new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(value)))
+                .collect(Collectors.toList());
+        ctx.writeAndFlush(new ArrayRedisMessage(valueMessages));
+    }
+
+    private void handleHdelCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        String key = CodecUtil.str(keyMsg);
+        List<String> fields = arrayRedisMessage.children().stream()
+                .skip(2)
+                .map(redisMessage -> (FullBulkStringRedisMessage) redisMessage)
+                .map(CodecUtil::str)
+                .collect(Collectors.toList());
+        long deleted = redisEngine.hdel(key, fields);
+        ctx.writeAndFlush(new IntegerRedisMessage(deleted));
+    }
+
+    private void handleHexistsCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        FullBulkStringRedisMessage fieldMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(2);
+        String key = CodecUtil.str(keyMsg);
+        String field = CodecUtil.str(fieldMsg);
+        boolean exists = redisEngine.hexists(key, field);
+        ctx.writeAndFlush(new IntegerRedisMessage(exists ? 1 : 0));
+    }
+
+    private void handleHkeysCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        String key = CodecUtil.str(keyMsg);
+        Set<String> fields = redisEngine.hkeys(key);
+        List<RedisMessage> fieldMessages = fields.stream()
+                .map(field -> new FullBulkStringRedisMessage(Unpooled
+                        .wrappedBuffer(field.getBytes(StandardCharsets.UTF_8))))
+                .collect(Collectors.toList());
+        ctx.writeAndFlush(new ArrayRedisMessage(fieldMessages));
+    }
+
+    private void handleHvalsCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        String key = CodecUtil.str(keyMsg);
+        List<byte[]> values = redisEngine.hvals(key);
+        List<RedisMessage> valueMessages = values.stream()
+                .map(value -> new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(value)))
+                .collect(Collectors.toList());
+        ctx.writeAndFlush(new ArrayRedisMessage(valueMessages));
+    }
+
+    private void handleHgetallCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        String key = CodecUtil.str(keyMsg);
+        Map<String, byte[]> hash = redisEngine.hgetall(key);
+        List<RedisMessage> hashMessages = hash.entrySet().stream()
+                .flatMap(entry -> Stream.of(
+                        new FullBulkStringRedisMessage(Unpooled
+                                .wrappedBuffer(entry.getKey().getBytes(StandardCharsets.UTF_8))),
+                        new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(entry.getValue()))
+                ))
+                .collect(Collectors.toList());
+        ctx.writeAndFlush(new ArrayRedisMessage(hashMessages));
+    }
+
+    private void handleKeysCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage patternMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        String pattern = CodecUtil.str(patternMsg);
+        List<String> keys = redisEngine.keys(pattern);
+        List<RedisMessage> redisMessages = keys.stream()
+                .map(key -> (RedisMessage)
+                        new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(key.getBytes(StandardCharsets.UTF_8))))
+                .toList();
+        ctx.writeAndFlush(new ArrayRedisMessage(redisMessages));
     }
 
     private void handlePingCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {

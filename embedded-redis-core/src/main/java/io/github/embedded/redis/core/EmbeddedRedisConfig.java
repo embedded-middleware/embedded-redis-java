@@ -25,6 +25,8 @@ public class EmbeddedRedisConfig {
 
     private int port = 6379;
 
+    private boolean httpEnable;
+
     private int httpPort = 16379;
 
     public EmbeddedRedisConfig() {
@@ -37,6 +39,11 @@ public class EmbeddedRedisConfig {
 
     public EmbeddedRedisConfig port(int port) {
         this.port = port;
+        return this;
+    }
+
+    public EmbeddedRedisConfig httpEnable(boolean httpEnable) {
+        this.httpEnable = httpEnable;
         return this;
     }
 
