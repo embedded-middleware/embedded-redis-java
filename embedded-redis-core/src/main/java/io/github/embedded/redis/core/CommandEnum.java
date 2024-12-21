@@ -17,7 +17,7 @@
 package io.github.embedded.redis.core;
 
 public enum CommandEnum {
-
+    HELLO,
     SET,
     SETEX,
     GET,
