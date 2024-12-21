@@ -29,6 +29,7 @@ import io.netty.handler.codec.redis.SimpleStringRedisMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,7 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
             try {
                 CommandEnum commandEnum = CommandEnum.valueOf(cmd);
                 switch (commandEnum) {
+                    case HELLO -> handleHelloCmd(ctx, arrayRedisMessage);
                     case SET -> handleSetCmd(ctx, arrayRedisMessage);
                     case SETEX -> handleSetExCmd(ctx, arrayRedisMessage);
                     case GET -> handleGetCmd(ctx, arrayRedisMessage);
@@ -84,6 +86,13 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
                 ctx.writeAndFlush(new ErrorRedisMessage("ERR unknown command '" + cmd + "'"));
             }
         }
+    }
+
+    private void handleHelloCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        SimpleStringRedisMessage server = new SimpleStringRedisMessage("server");
+        List<RedisMessage> list = new ArrayList<>();
+        list.add(server);
+        ctx.writeAndFlush(new ArrayRedisMessage(list));
     }
 
     private void handleSetCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
