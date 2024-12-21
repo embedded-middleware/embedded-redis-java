@@ -21,6 +21,8 @@ public class RedisContent {
 
     private RedisSet set;
 
+    private RedisList list;
+
     public RedisContent(RedisVal redisVal) {
         this.val = redisVal;
     }
@@ -29,11 +31,19 @@ public class RedisContent {
         this.set = redisSet;
     }
 
+    public RedisContent(RedisList redisList) {
+        this.list = redisList;
+    }
+
     public RedisVal val() {
         return this.val;
     }
 
     public RedisSet set() {
         return this.set;
+    }
+
+    public RedisList list() {
+        return this.list;
     }
 }

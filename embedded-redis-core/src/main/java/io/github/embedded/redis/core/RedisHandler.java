@@ -76,6 +76,7 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
                     case HKEYS -> handleHkeysCmd(ctx, arrayRedisMessage);
                     case HVALS -> handleHvalsCmd(ctx, arrayRedisMessage);
                     case HGETALL -> handleHgetallCmd(ctx, arrayRedisMessage);
+                    case LRANGE -> handleLrangeCmd(ctx, arrayRedisMessage);
                     case KEYS -> handleKeysCmd(ctx, arrayRedisMessage);
                     case PING -> handlePingCmd(ctx, arrayRedisMessage);
                     case FLUSHDB -> handleFlushDBCmd(ctx, arrayRedisMessage);
@@ -246,6 +247,21 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
                 ))
                 .collect(Collectors.toList());
         ctx.writeAndFlush(new ArrayRedisMessage(hashMessages));
+    }
+
+    private void handleLrangeCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
+        FullBulkStringRedisMessage keyMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(1);
+        FullBulkStringRedisMessage startMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(2);
+        FullBulkStringRedisMessage stopMsg = (FullBulkStringRedisMessage) arrayRedisMessage.children().get(3);
+        String key = CodecUtil.str(keyMsg);
+        int start = Integer.parseInt(CodecUtil.str(startMsg));
+        int stop = Integer.parseInt(CodecUtil.str(stopMsg));
+
+        List<byte[]> range = redisEngine.lrange(key, start, stop);
+        List<RedisMessage> redisMessages = range.stream()
+                .map(value -> new FullBulkStringRedisMessage(Unpooled.wrappedBuffer(value)))
+                .collect(Collectors.toList());
+        ctx.writeAndFlush(new ArrayRedisMessage(redisMessages));
     }
 
     private void handleKeysCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
