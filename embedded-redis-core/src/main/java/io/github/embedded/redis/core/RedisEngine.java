@@ -17,6 +17,7 @@
 package io.github.embedded.redis.core;
 
 import io.github.embedded.redis.core.model.RedisContent;
+import io.github.embedded.redis.core.model.RedisList;
 import io.github.embedded.redis.core.model.RedisSet;
 import io.github.embedded.redis.core.model.RedisVal;
 
@@ -130,6 +131,10 @@ public class RedisEngine {
         return set.getAll();
     }
 
+    public List<byte[]> lrange(String key, int start, int stop) {
+        RedisList list = map.getOrDefault(key, new RedisContent(new RedisList())).list();
+        return list.range(start, stop);
+    }
 
     public List<String> keys(String pattern) {
         Pattern compilePattern = Pattern.compile(pattern.replace("*", ".*"));

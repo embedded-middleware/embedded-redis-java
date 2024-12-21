@@ -30,6 +30,7 @@ public enum CommandEnum {
     HKEYS,
     HVALS,
     HGETALL,
+    LRANGE,
     KEYS,
     DEL,
     PING,
