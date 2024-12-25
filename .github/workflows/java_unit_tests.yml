@@ -12,16 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: line lint
+name: java unit tests
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
+
 jobs:
-  line_lint:
-    name: line lint
+  java_unit_tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: linelint
-        uses: shoothzj/linelint@main
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: unit tests
+        run: mvn -B clean test; mvn validate
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

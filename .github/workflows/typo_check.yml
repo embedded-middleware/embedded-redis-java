@@ -12,21 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: spot bugs
+name: typo check
 on:
   pull_request:
     branches:
       - main
-
 jobs:
-  spotbugs:
+  typo_check:
+    name: typo check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Maven Central Repository
-        uses: actions/setup-java@v2
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: spotbugs
-        run: mvn -B -DskipTests clean verify spotbugs:spotbugs
+      - uses: actions/checkout@v4
+      - name: Check typos
+        uses: crate-ci/typos@master
