@@ -23,7 +23,7 @@
 
     <groupId>io.github.embedded-middleware</groupId>
     <artifactId>embedded-redis-parent</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
     <modules>
         <module>embedded-redis-core</module>
         <module>embedded-redis-tests</module>
