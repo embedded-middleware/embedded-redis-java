@@ -90,9 +90,15 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void handleHelloCmd(ChannelHandlerContext ctx, ArrayRedisMessage arrayRedisMessage) {
-        SimpleStringRedisMessage server = new SimpleStringRedisMessage("server");
         List<RedisMessage> list = new ArrayList<>();
-        list.add(server);
+        SimpleStringRedisMessage serverKey = new SimpleStringRedisMessage("server");
+        SimpleStringRedisMessage serverValue = new SimpleStringRedisMessage("redis");
+        list.add(serverKey);
+        list.add(serverValue);
+        SimpleStringRedisMessage versionKey = new SimpleStringRedisMessage("version");
+        SimpleStringRedisMessage versionValue = new SimpleStringRedisMessage("0.0.3");
+        list.add(versionKey);
+        list.add(versionValue);
         ctx.writeAndFlush(new ArrayRedisMessage(list));
     }
 
