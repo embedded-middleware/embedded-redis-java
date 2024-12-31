@@ -96,7 +96,7 @@ public class RedisHandler extends ChannelInboundHandlerAdapter {
         list.add(serverKey);
         list.add(serverValue);
         SimpleStringRedisMessage versionKey = new SimpleStringRedisMessage("version");
-        SimpleStringRedisMessage versionValue = new SimpleStringRedisMessage("0.0.3");
+        SimpleStringRedisMessage versionValue = new SimpleStringRedisMessage("0.0.4");
         list.add(versionKey);
         list.add(versionValue);
         ctx.writeAndFlush(new ArrayRedisMessage(list));
